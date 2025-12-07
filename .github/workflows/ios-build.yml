@@ -1,0 +1,163 @@
+name: Build iOS & Deploy to App Store
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      upload_to_testflight:
+        description: 'Upload to TestFlight'
+        required: true
+        default: 'true'
+        type: boolean
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: flutter pub get
+
+      - name: Create firebase_options.dart
+        working-directory: ./app/lib
+        run: |
+          cat > firebase_options.dart << 'EOF'
+          import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+          import 'package:flutter/foundation.dart'
+              show defaultTargetPlatform, kIsWeb, TargetPlatform;
+
+          class DefaultFirebaseOptions {
+            static FirebaseOptions get currentPlatform {
+              if (kIsWeb) {
+                return web;
+              }
+              switch (defaultTargetPlatform) {
+                case TargetPlatform.android:
+                  return android;
+                case TargetPlatform.iOS:
+                  return ios;
+                default:
+                  throw UnsupportedError(
+                    'DefaultFirebaseOptions are not supported for this platform.',
+                  );
+              }
+            }
+
+            static const FirebaseOptions web = FirebaseOptions(
+              apiKey: '${{ secrets.FIREBASE_WEB_API_KEY }}',
+              appId: '${{ secrets.FIREBASE_WEB_APP_ID }}',
+              messagingSenderId: '${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}',
+              projectId: '${{ secrets.FIREBASE_PROJECT_ID }}',
+              authDomain: '${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com',
+              storageBucket: '${{ secrets.FIREBASE_PROJECT_ID }}.appspot.com',
+            );
+
+            static const FirebaseOptions android = FirebaseOptions(
+              apiKey: '${{ secrets.FIREBASE_ANDROID_API_KEY }}',
+              appId: '${{ secrets.FIREBASE_ANDROID_APP_ID }}',
+              messagingSenderId: '${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}',
+              projectId: '${{ secrets.FIREBASE_PROJECT_ID }}',
+            );
+
+            static const FirebaseOptions ios = FirebaseOptions(
+              apiKey: '${{ secrets.FIREBASE_IOS_API_KEY }}',
+              appId: '${{ secrets.FIREBASE_IOS_APP_ID }}',
+              messagingSenderId: '${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}',
+              projectId: '${{ secrets.FIREBASE_PROJECT_ID }}',
+              storageBucket: '${{ secrets.FIREBASE_PROJECT_ID }}.appspot.com',
+              iosBundleId: 'com.cardscontrol.app',
+            );
+          }
+          EOF
+
+      - name: Create GoogleService-Info.plist
+        working-directory: ./app/ios/Runner
+        run: |
+          cat > GoogleService-Info.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CLIENT_ID</key>
+              <string>${{ secrets.FIREBASE_IOS_CLIENT_ID }}</string>
+              <key>REVERSED_CLIENT_ID</key>
+              <string>${{ secrets.FIREBASE_IOS_REVERSED_CLIENT_ID }}</string>
+              <key>API_KEY</key>
+              <string>${{ secrets.FIREBASE_IOS_API_KEY }}</string>
+              <key>GCM_SENDER_ID</key>
+              <string>${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}</string>
+              <key>PLIST_VERSION</key>
+              <string>1</string>
+              <key>BUNDLE_ID</key>
+              <string>com.cardscontrol.app</string>
+              <key>PROJECT_ID</key>
+              <string>${{ secrets.FIREBASE_PROJECT_ID }}</string>
+              <key>STORAGE_BUCKET</key>
+              <string>${{ secrets.FIREBASE_PROJECT_ID }}.appspot.com</string>
+              <key>IS_ADS_ENABLED</key>
+              <false/>
+              <key>IS_ANALYTICS_ENABLED</key>
+              <false/>
+              <key>IS_APPINVITE_ENABLED</key>
+              <true/>
+              <key>IS_GCM_ENABLED</key>
+              <true/>
+              <key>IS_SIGNIN_ENABLED</key>
+              <true/>
+              <key>GOOGLE_APP_ID</key>
+              <string>${{ secrets.FIREBASE_IOS_APP_ID }}</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Install Apple Certificate
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+
+      - name: Install Provisioning Profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Build iOS
+        working-directory: ./app
+        run: |
+          flutter build ipa \
+            --release \
+            --dart-define=CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }} \
+            --export-options-plist=ios/ExportOptions.plist
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
+          path: app/build/ios/ipa/*.ipa
+          retention-days: 30
+
+      - name: Upload to TestFlight
+        if: ${{ github.event.inputs.upload_to_testflight == 'true' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: app/build/ios/ipa/nfcpro.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
