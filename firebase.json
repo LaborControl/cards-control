@@ -1,0 +1,53 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "hosting": {
+    "source": "web-dashboard",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/google-wallet/**",
+        "function": "generateGoogleWalletPass"
+      },
+      {
+        "source": "/api/apple-wallet/**",
+        "function": "generateAppleWalletPass"
+      },
+      {
+        "source": "/api/card/**",
+        "function": "getPublicCard"
+      },
+      {
+        "source": "/card/**",
+        "destination": "/card.html"
+      },
+      {
+        "source": "/template/**",
+        "destination": "/template.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  }
+}

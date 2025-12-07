@@ -1,0 +1,145 @@
+name: nfc_pro
+description: Application mobile professionnelle NFC & RFID
+publish_to: 'none'
+version: 1.0.0+4
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+
+  # Navigation
+  go_router: ^14.0.0
+
+  # Network
+  dio: ^5.4.0
+  retrofit: ^4.4.1
+  http: ^1.2.0
+  json_annotation: ^4.9.0
+
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  sqflite: ^2.3.2
+  path_provider: ^2.1.2
+
+  # NFC
+  nfc_manager: ^3.3.0
+  flutter_nfc_kit: ^3.3.1
+
+  # UI Components
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  lottie: ^3.0.0
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^4.0.1
+
+  # OCR & Image Processing
+  google_mlkit_text_recognition: ^0.13.0
+  image: ^4.1.7
+  email_validator: ^2.1.17
+  phone_numbers_parser: ^8.1.0
+
+  # Forms & Validation
+  reactive_forms: ^17.0.1
+
+  # Utils
+  intl: ^0.20.2
+  uuid: ^4.3.3
+  equatable: ^2.0.5
+  freezed_annotation: ^2.4.1
+  dartz: ^0.10.1
+  logger: ^2.0.2+1
+  share_plus: ^7.2.2
+  url_launcher: ^6.2.4
+  image_picker: ^1.0.7
+  file_picker: ^8.0.0
+  permission_handler: ^11.2.0
+
+  # Auth & Security
+  flutter_secure_storage: ^9.0.0
+  local_auth: ^2.1.8
+  crypto: ^3.0.3
+
+  # Wallet Integration (will implement custom solution)
+
+  # Firebase
+  firebase_core: ^2.25.4
+  firebase_auth: ^4.17.4
+  cloud_firestore: ^4.15.4
+  firebase_storage: ^11.6.5
+  firebase_analytics: ^10.8.5
+  firebase_crashlytics: ^3.4.13
+  firebase_messaging: ^14.7.15
+  firebase_app_check: ^0.2.1+8
+
+  # Google Sign In
+  google_sign_in: ^6.2.1
+
+  # Apple Sign In
+  sign_in_with_apple: ^6.1.4
+
+  # In-App Purchase
+  in_app_purchase: ^3.1.13
+
+  # Contacts
+  flutter_contacts: ^1.1.7+1
+
+  # Icons
+  cupertino_icons: ^1.0.6
+  flutter_feather_icons: ^2.0.0+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  flutter_launcher_icons: ^0.13.1
+  build_runner: ^2.4.8
+  freezed: ^2.4.6
+  json_serializable: ^6.8.0
+  retrofit_generator: ^8.2.1
+  riverpod_generator: ^2.3.9
+  hive_generator: ^2.0.1
+  mockito: ^5.4.4
+  mocktail: ^1.0.3
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
+
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #         weight: 400
+  #       - asset: assets/fonts/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
+
+  #   - family: JetBrainsMono
+  #     fonts:
+  #       - asset: assets/fonts/JetBrainsMono-Regular.ttf
+  #         weight: 400
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_icon.png"

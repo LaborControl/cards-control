@@ -1,0 +1,67 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Fonction utilitaire pour vérifier l'authentification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Fonction pour vérifier que l'utilisateur accède à ses propres fichiers
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Fonction pour vérifier le type de fichier image
+    function isImageFile() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // Fonction pour vérifier la taille du fichier (max 10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Photos et logos des cartes de visite
+    match /business_cards/{userId}/{type}/{fileName} {
+      // Lecture: tout le monde peut voir les images (pour le partage public)
+      allow read: if true;
+
+      // Écriture: seulement le propriétaire
+      allow write: if isOwner(userId)
+                   && isImageFile()
+                   && isValidSize();
+    }
+
+    // Structure alternative: users/{userId}/cards/{cardId}/{type}
+    match /users/{userId}/cards/{cardId}/{type} {
+      // Lecture: tout le monde peut voir les images
+      allow read: if true;
+
+      // Écriture: seulement le propriétaire
+      allow write: if isOwner(userId)
+                   && isImageFile()
+                   && isValidSize();
+    }
+
+    // Photos de profil utilisateur
+    match /users/{userId}/profile/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId)
+                   && isImageFile()
+                   && isValidSize();
+    }
+
+    // Contacts scannés (OCR)
+    match /users/{userId}/scanned/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+                   && isImageFile()
+                   && isValidSize();
+    }
+
+    // Fallback: Bloquer tout accès non explicitement autorisé
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

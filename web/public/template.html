@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag NFC - Cards Control</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#6366F1">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Tag NFC">
+    <meta property="og:description" content="Contenu partage via NFC">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/og-image.png">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --background: #0F172A;
+            --surface: #1E293B;
+            --surface-light: #334155;
+            --text: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --success: #10B981;
+            --error: #EF4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 40px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .icon-container svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .content-box {
+            background: var(--surface-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .content-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .content-value {
+            font-size: 16px;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .content-value a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .content-value a:hover {
+            text-decoration: underline;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, background 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .action-button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
+        }
+
+        .action-button svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            fill: currentColor;
+        }
+
+        .copy-button {
+            background: var(--surface-light);
+            color: var(--text);
+        }
+
+        .copy-button:hover {
+            background: var(--surface);
+        }
+
+        .wifi-info {
+            display: grid;
+            gap: 12px;
+        }
+
+        .wifi-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--surface);
+            border-radius: 8px;
+        }
+
+        .wifi-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .wifi-value {
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .vcard-info {
+            display: grid;
+            gap: 12px;
+        }
+
+        .vcard-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .vcard-org {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .contact-link {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--surface);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .contact-link:hover {
+            background: var(--primary);
+        }
+
+        .contact-link svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            fill: currentColor;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--surface-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .error-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .app-banner {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .app-banner-text {
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .app-banner-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .app-banner-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .app-banner-btn {
+            background: white;
+            color: var(--primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .copied-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .copied-toast.show {
+            opacity: 1;
+        }
+
+        /* Event specific styles */
+        .event-content {
+            background: var(--surface-light);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .event-datetime {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--surface);
+        }
+
+        .event-date-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .event-date-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .event-date-text {
+            flex: 1;
+        }
+
+        .event-date {
+            font-size: 18px;
+            font-weight: 600;
+            text-transform: capitalize;
+            margin-bottom: 4px;
+        }
+
+        .event-time {
+            font-size: 16px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .event-location {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--surface);
+            border-radius: 12px;
+        }
+
+        .event-location-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .event-location-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-secondary);
+        }
+
+        .event-location-text {
+            flex: 1;
+            color: var(--text);
+        }
+
+        .event-description {
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .event-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 0;
+        }
+
+        .event-link:hover {
+            text-decoration: underline;
+        }
+
+        .event-link svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Event header - use title as main display */
+        .event-header {
+            text-align: center;
+        }
+
+        .event-title {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        /* Event image */
+        .event-image-container {
+            width: 100%;
+            max-height: 250px;
+            overflow: hidden;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+
+        .event-image {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-header-with-image {
+            padding: 24px 24px 20px;
+        }
+
+        .card-header-with-image .icon-container {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 12px;
+        }
+
+        .card-header-with-image .icon-container svg {
+            width: 30px;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <span class="logo-text">Cards Control</span>
+        </div>
+
+        <div id="template-container">
+            <div class="card">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Chargement...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Tag NFC cree avec <a href="https://cards-control.app">Cards Control</a>
+        </div>
+    </div>
+
+    <div id="copied-toast" class="copied-toast">Copie !</div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAssP7KJgZ5TyTFgGi1I37TLz1qMwvcrrQ",
+            authDomain: "lc-nfc-pro.firebaseapp.com",
+            projectId: "lc-nfc-pro",
+            storageBucket: "lc-nfc-pro.firebasestorage.app",
+            messagingSenderId: "245650933256",
+            appId: "1:245650933256:web:abc123def456"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get template ID from URL
+        const pathParts = window.location.pathname.split('/');
+        const templateId = pathParts[pathParts.length - 1];
+
+        // Type configurations
+        const typeConfig = {
+            url: { icon: 'link', color: '#6366F1', label: 'Lien URL' },
+            text: { icon: 'text', color: '#22C55E', label: 'Texte' },
+            wifi: { icon: 'wifi', color: '#8B5CF6', label: 'WiFi' },
+            vcard: { icon: 'user', color: '#F97316', label: 'Contact' },
+            phone: { icon: 'phone', color: '#14B8A6', label: 'Telephone' },
+            email: { icon: 'email', color: '#EF4444', label: 'Email' },
+            sms: { icon: 'sms', color: '#6366F1', label: 'SMS' },
+            location: { icon: 'location', color: '#EC4899', label: 'Localisation' },
+            event: { icon: 'calendar', color: '#7C3AED', label: 'Evenement' },
+            googleReview: { icon: 'star', color: '#F59E0B', label: 'Avis Google' },
+            appDownload: { icon: 'download', color: '#06B6D4', label: 'Application' },
+            tip: { icon: 'dollar', color: '#10B981', label: 'Pourboire' },
+            medicalId: { icon: 'heart', color: '#DC2626', label: 'ID Medical' },
+            petId: { icon: 'paw', color: '#92400E', label: 'ID Animal' },
+            luggageId: { icon: 'briefcase', color: '#64748B', label: 'ID Bagage' }
+        };
+
+        const icons = {
+            link: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+            text: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+            wifi: '<svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
+            user: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+            phone: '<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+            email: '<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+            sms: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+            location: '<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+            calendar: '<svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/><rect x="7" y="12" width="2" height="2"/><rect x="11" y="12" width="2" height="2"/><rect x="15" y="12" width="2" height="2"/><rect x="7" y="16" width="2" height="2"/><rect x="11" y="16" width="2" height="2"/><circle cx="18" cy="18" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M18 15v3l2 1"/></svg>',
+            star: '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+            download: '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+            dollar: '<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+            heart: '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+            paw: '<svg viewBox="0 0 24 24"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045A5.5 5.5 0 0 1 9 10Z"/></svg>',
+            briefcase: '<svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+            copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+            external: '<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+        };
+
+        // Load template
+        async function loadTemplate() {
+            const container = document.getElementById('template-container');
+
+            if (!templateId || templateId === 'template') {
+                showError('ID de template invalide');
+                return;
+            }
+
+            try {
+                const doc = await db.collection('public_templates').doc(templateId).get();
+
+                if (!doc.exists) {
+                    showError('Template non trouve');
+                    return;
+                }
+
+                const template = doc.data();
+
+                // Record view
+                try {
+                    await db.collection('template_views').add({
+                        templateId: templateId,
+                        userId: template.userId,
+                        viewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        source: 'web',
+                        userAgent: navigator.userAgent
+                    });
+                } catch (e) {
+                    console.log('Could not record view', e);
+                }
+
+                displayTemplate(template);
+                tryOpenInApp();
+
+            } catch (error) {
+                console.error('Error loading template:', error);
+                showError('Erreur lors du chargement');
+            }
+        }
+
+        function displayTemplate(template) {
+            const container = document.getElementById('template-container');
+            const config = typeConfig[template.type] || typeConfig.url;
+            const icon = icons[config.icon] || icons.link;
+
+            document.documentElement.style.setProperty('--primary', config.color);
+
+            let contentHtml = '';
+            let actionHtml = '';
+
+            switch (template.type) {
+                case 'url':
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Lien</div>
+                            <div class="content-value">
+                                <a href="${escapeHtml(template.data.url)}" target="_blank">${escapeHtml(template.data.url)}</a>
+                            </div>
+                        </div>
+                    `;
+                    actionHtml = `<a href="${escapeHtml(template.data.url)}" target="_blank" class="action-button">${icons.external} Ouvrir le lien</a>`;
+                    break;
+
+                case 'text':
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Texte</div>
+                            <div class="content-value">${escapeHtml(template.data.text)}</div>
+                        </div>
+                    `;
+                    actionHtml = `<button onclick="copyText('${escapeJs(template.data.text)}')" class="action-button copy-button">${icons.copy} Copier le texte</button>`;
+                    break;
+
+                case 'wifi':
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Configuration WiFi</div>
+                            <div class="wifi-info">
+                                <div class="wifi-row">
+                                    <span class="wifi-label">Reseau</span>
+                                    <span class="wifi-value">${escapeHtml(template.data.ssid)}</span>
+                                </div>
+                                <div class="wifi-row">
+                                    <span class="wifi-label">Mot de passe</span>
+                                    <span class="wifi-value">${escapeHtml(template.data.password)}</span>
+                                </div>
+                                <div class="wifi-row">
+                                    <span class="wifi-label">Securite</span>
+                                    <span class="wifi-value">${escapeHtml(template.data.authType || 'WPA2')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    actionHtml = `<button onclick="copyText('${escapeJs(template.data.password)}')" class="action-button copy-button">${icons.copy} Copier le mot de passe</button>`;
+                    break;
+
+                case 'vcard':
+                    const fullName = `${template.data.firstName || ''} ${template.data.lastName || ''}`.trim();
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="vcard-info">
+                                <div class="vcard-name">${escapeHtml(fullName)}</div>
+                                ${template.data.organization ? `<div class="vcard-org">${escapeHtml(template.data.organization)}</div>` : ''}
+                                ${template.data.phone ? `<a href="tel:${template.data.phone}" class="contact-link">${icons.phone} ${escapeHtml(template.data.phone)}</a>` : ''}
+                                ${template.data.email ? `<a href="mailto:${template.data.email}" class="contact-link">${icons.email} ${escapeHtml(template.data.email)}</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'phone':
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Numero de telephone</div>
+                            <div class="content-value" style="font-size: 24px; font-weight: 600;">
+                                <a href="tel:${template.data.phone}">${escapeHtml(template.data.phone)}</a>
+                            </div>
+                        </div>
+                    `;
+                    actionHtml = `<a href="tel:${template.data.phone}" class="action-button">${icons.phone} Appeler</a>`;
+                    break;
+
+                case 'email':
+                    let mailto = `mailto:${template.data.email}`;
+                    if (template.data.subject) mailto += `?subject=${encodeURIComponent(template.data.subject)}`;
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Email</div>
+                            <div class="content-value">${escapeHtml(template.data.email)}</div>
+                            ${template.data.subject ? `<div class="content-label" style="margin-top:12px">Sujet</div><div class="content-value">${escapeHtml(template.data.subject)}</div>` : ''}
+                        </div>
+                    `;
+                    actionHtml = `<a href="${mailto}" class="action-button">${icons.email} Envoyer un email</a>`;
+                    break;
+
+                case 'sms':
+                    let sms = `sms:${template.data.phone}`;
+                    if (template.data.message) sms += `?body=${encodeURIComponent(template.data.message)}`;
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Numero</div>
+                            <div class="content-value">${escapeHtml(template.data.phone)}</div>
+                            ${template.data.message ? `<div class="content-label" style="margin-top:12px">Message</div><div class="content-value">${escapeHtml(template.data.message)}</div>` : ''}
+                        </div>
+                    `;
+                    actionHtml = `<a href="${sms}" class="action-button">${icons.sms} Envoyer un SMS</a>`;
+                    break;
+
+                case 'location':
+                    const mapsUrl = `https://maps.google.com/?q=${template.data.latitude},${template.data.longitude}`;
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Position GPS</div>
+                            ${template.data.label ? `<div class="content-value" style="font-weight:600;margin-bottom:8px">${escapeHtml(template.data.label)}</div>` : ''}
+                            <div class="content-value" style="color:var(--text-secondary)">${template.data.latitude}, ${template.data.longitude}</div>
+                        </div>
+                    `;
+                    actionHtml = `<a href="${mapsUrl}" target="_blank" class="action-button">${icons.location} Voir sur la carte</a>`;
+                    break;
+
+                case 'event':
+                    // Format date for display
+                    let eventDateDisplay = '';
+                    let eventTimeDisplay = '';
+                    if (template.data.date) {
+                        try {
+                            const eventDate = new Date(template.data.date);
+                            eventDateDisplay = eventDate.toLocaleDateString('fr-FR', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                            });
+                        } catch(e) {
+                            eventDateDisplay = template.data.date;
+                        }
+                    }
+                    if (template.data.time) {
+                        eventTimeDisplay = template.data.time;
+                    }
+
+                    // Check if event has an image
+                    const eventImageUrl = template.data.imageUrl || template.imageUrl;
+
+                    contentHtml = `
+                        <div class="event-content">
+                            ${eventImageUrl ? `
+                            <div class="event-image-container">
+                                <img src="${escapeHtml(eventImageUrl)}" alt="${escapeHtml(template.data.title)}" class="event-image" onerror="this.parentElement.style.display='none'">
+                            </div>
+                            ` : ''}
+                            ${eventDateDisplay ? `
+                            <div class="event-datetime">
+                                <div class="event-date-icon">${icons.calendar}</div>
+                                <div class="event-date-text">
+                                    <div class="event-date">${eventDateDisplay}</div>
+                                    ${eventTimeDisplay ? `<div class="event-time">${eventTimeDisplay}</div>` : ''}
+                                </div>
+                            </div>
+                            ` : ''}
+                            ${template.data.location ? `
+                            <div class="event-location">
+                                <div class="event-location-icon">${icons.location}</div>
+                                <div class="event-location-text">${escapeHtml(template.data.location)}</div>
+                            </div>
+                            ` : ''}
+                            ${template.data.description ? `
+                            <div class="event-description">
+                                ${escapeHtml(template.data.description).replace(/\n/g, '<br>')}
+                            </div>
+                            ` : ''}
+                            ${template.data.url ? `
+                            <a href="${escapeHtml(template.data.url)}" target="_blank" class="event-link">
+                                ${icons.external} Plus d'informations
+                            </a>
+                            ` : ''}
+                        </div>
+                    `;
+                    // Add calendar button - use event title as the main display
+                    actionHtml = `<button onclick="downloadICS('${escapeJs(template.data.title)}', '${escapeJs(template.data.date || '')}', '${escapeJs(template.data.time || '')}', '${escapeJs(template.data.location || '')}', '${escapeJs(template.data.description || '')}')" class="action-button">${icons.calendar} Ajouter au calendrier</button>`;
+                    break;
+
+                case 'googleReview':
+                    const reviewUrl = `https://search.google.com/local/writereview?placeid=${template.data.placeId}`;
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Avis Google</div>
+                            <div class="content-value">Laissez un avis pour nous aider !</div>
+                        </div>
+                    `;
+                    actionHtml = `<a href="${reviewUrl}" target="_blank" class="action-button">${icons.star} Laisser un avis</a>`;
+                    break;
+
+                case 'medicalId':
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="vcard-name" style="color:#DC2626">ID Medical</div>
+                            ${template.data.name ? `<div style="margin-top:12px"><strong>Nom:</strong> ${escapeHtml(template.data.name)}</div>` : ''}
+                            ${template.data.bloodType ? `<div><strong>Groupe sanguin:</strong> ${escapeHtml(template.data.bloodType)}</div>` : ''}
+                            ${template.data.allergies ? `<div><strong>Allergies:</strong> ${escapeHtml(template.data.allergies)}</div>` : ''}
+                            ${template.data.medications ? `<div><strong>Medicaments:</strong> ${escapeHtml(template.data.medications)}</div>` : ''}
+                            ${template.data.emergencyContact ? `<div style="margin-top:12px"><strong>Contact urgence:</strong> <a href="tel:${template.data.emergencyContact}">${escapeHtml(template.data.emergencyContact)}</a></div>` : ''}
+                        </div>
+                    `;
+                    break;
+
+                case 'petId':
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="vcard-name">${escapeHtml(template.data.petName)}</div>
+                            ${template.data.species ? `<div style="color:var(--text-secondary)">${escapeHtml(template.data.species)} ${template.data.breed ? '- ' + escapeHtml(template.data.breed) : ''}</div>` : ''}
+                            ${template.data.chipNumber ? `<div style="margin-top:8px;font-size:12px">Puce: ${escapeHtml(template.data.chipNumber)}</div>` : ''}
+                            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--surface)">
+                                <div style="color:var(--text-secondary);font-size:12px;margin-bottom:4px">Proprietaire</div>
+                                <div>${escapeHtml(template.data.ownerName)}</div>
+                                ${template.data.ownerPhone ? `<a href="tel:${template.data.ownerPhone}" style="color:var(--primary)">${escapeHtml(template.data.ownerPhone)}</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    if (template.data.ownerPhone) {
+                        actionHtml = `<a href="tel:${template.data.ownerPhone}" class="action-button">${icons.phone} Appeler le proprietaire</a>`;
+                    }
+                    break;
+
+                case 'luggageId':
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="vcard-name">ID Bagage</div>
+                            <div style="margin-top:12px">
+                                <div><strong>Proprietaire:</strong> ${escapeHtml(template.data.ownerName)}</div>
+                                ${template.data.ownerPhone ? `<div>${icons.phone} <a href="tel:${template.data.ownerPhone}">${escapeHtml(template.data.ownerPhone)}</a></div>` : ''}
+                                ${template.data.ownerEmail ? `<div style="color:var(--text-secondary)">${escapeHtml(template.data.ownerEmail)}</div>` : ''}
+                                ${template.data.flightNumber ? `<div style="margin-top:8px"><strong>Vol:</strong> ${escapeHtml(template.data.flightNumber)}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    if (template.data.ownerPhone) {
+                        actionHtml = `<a href="tel:${template.data.ownerPhone}" class="action-button">${icons.phone} Contacter le proprietaire</a>`;
+                    }
+                    break;
+
+                default:
+                    contentHtml = `
+                        <div class="content-box">
+                            <div class="content-label">Contenu</div>
+                            <pre class="content-value" style="white-space:pre-wrap;font-size:12px">${escapeHtml(JSON.stringify(template.data, null, 2))}</pre>
+                        </div>
+                    `;
+            }
+
+            // For events, use the event title as the main display title
+            const displayTitle = template.type === 'event' && template.data.title
+                ? template.data.title
+                : template.name;
+
+            // For events, hide the type badge (it's obvious from the design)
+            const showTypeBadge = template.type !== 'event';
+
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-container">${icon}</div>
+                        <div class="title">${escapeHtml(displayTitle)}</div>
+                        ${showTypeBadge ? `<div class="type-badge">${config.label}</div>` : ''}
+                    </div>
+                    <div class="card-body">
+                        ${contentHtml}
+                        ${actionHtml}
+                        <div class="app-banner" id="app-banner">
+                            <div class="app-banner-text">
+                                <div class="app-banner-title">Cards Control</div>
+                                <div class="app-banner-subtitle">Creez vos propres tags NFC</div>
+                            </div>
+                            <a href="#" id="download-app-btn" class="app-banner-btn">Telecharger</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Show app banner on mobile
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isAndroid || isIOS) {
+                const banner = document.getElementById('app-banner');
+                const downloadBtn = document.getElementById('download-app-btn');
+                if (banner && downloadBtn) {
+                    banner.style.display = 'flex';
+                    downloadBtn.href = isAndroid
+                        ? 'https://play.google.com/store/apps/details?id=com.cardscontrol.app'
+                        : 'https://apps.apple.com/app/id6739503891';
+                }
+            }
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('copied-toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+
+        function downloadICS(title, dateStr, timeStr, location, description) {
+            // Parse date
+            let startDate = new Date();
+            let endDate = new Date();
+
+            if (dateStr) {
+                try {
+                    startDate = new Date(dateStr);
+                    endDate = new Date(dateStr);
+                } catch (e) {
+                    console.error('Error parsing date:', e);
+                }
+            }
+
+            // Parse time if provided
+            if (timeStr) {
+                const timeParts = timeStr.split(':');
+                if (timeParts.length >= 2) {
+                    startDate.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), 0);
+                    endDate.setHours(parseInt(timeParts[0]) + 1, parseInt(timeParts[1]), 0); // Default 1 hour duration
+                }
+            } else {
+                // All day event
+                startDate.setHours(0, 0, 0);
+                endDate.setHours(23, 59, 59);
+            }
+
+            // Format date for ICS (YYYYMMDDTHHMMSS)
+            const formatICSDate = (date, allDay = false) => {
+                const pad = (n) => n.toString().padStart(2, '0');
+                const year = date.getFullYear();
+                const month = pad(date.getMonth() + 1);
+                const day = pad(date.getDate());
+
+                if (allDay) {
+                    return `${year}${month}${day}`;
+                }
+
+                const hours = pad(date.getHours());
+                const minutes = pad(date.getMinutes());
+                const seconds = pad(date.getSeconds());
+                return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+            };
+
+            const isAllDay = !timeStr;
+            const dtStart = isAllDay
+                ? `DTSTART;VALUE=DATE:${formatICSDate(startDate, true)}`
+                : `DTSTART:${formatICSDate(startDate)}`;
+            const dtEnd = isAllDay
+                ? `DTEND;VALUE=DATE:${formatICSDate(endDate, true)}`
+                : `DTEND:${formatICSDate(endDate)}`;
+
+            // Escape special characters for ICS
+            const escapeICS = (str) => {
+                if (!str) return '';
+                return str
+                    .replace(/\\/g, '\\\\')
+                    .replace(/;/g, '\\;')
+                    .replace(/,/g, '\\,')
+                    .replace(/\n/g, '\\n');
+            };
+
+            // Build ICS content
+            const icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Cards Control//NFC Event//FR',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'BEGIN:VEVENT',
+                `UID:${Date.now()}@cards-control.app`,
+                `DTSTAMP:${formatICSDate(new Date())}`,
+                dtStart,
+                dtEnd,
+                `SUMMARY:${escapeICS(title)}`,
+                location ? `LOCATION:${escapeICS(location)}` : '',
+                description ? `DESCRIPTION:${escapeICS(description)}` : '',
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].filter(line => line).join('\r\n');
+
+            // Create download
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show toast
+            const toast = document.getElementById('copied-toast');
+            toast.textContent = 'Evenement telecharge !';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.textContent = 'Copie !';
+            }, 2000);
+        }
+
+        function showError(message) {
+            const container = document.getElementById('template-container');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="error">
+                        <div class="error-icon">&#128533;</div>
+                        <h2>${message}</h2>
+                        <p style="margin-top: 12px; color: var(--text-secondary);">
+                            Ce template n'existe pas ou a ete supprime.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeJs(text) {
+            if (!text) return '';
+            return text.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+        }
+
+        function tryOpenInApp() {
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            if (isAndroid || isIOS) {
+                setTimeout(() => {
+                    window.location.href = `cardscontrol://template/${templateId}`;
+                }, 100);
+            }
+        }
+
+        // Load template on page load
+        loadTemplate();
+    </script>
+</body>
+</html>

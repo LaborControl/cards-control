@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.cardscontrol.app",
+      "sha256_cert_fingerprints": [
+        "AF:CC:F6:5F:A1:DA:2B:1D:65:6D:A8:CA:2A:A6:A6:6C:8B:F6:B9:39:B6:58:16:68:02:6E:73:47:8C:E9:D8:41"
+      ]
+    }
+  }
+]

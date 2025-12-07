@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de Confidentialité - Cards Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin: 30px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        p, li {
+            margin-bottom: 12px;
+            color: #555;
+        }
+        ul {
+            padding-left: 25px;
+        }
+        .highlight {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+        }
+        .contact {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .contact h2 {
+            color: white;
+            border: none;
+            margin-top: 0;
+        }
+        .contact a {
+            color: white;
+            text-decoration: underline;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 12px;
+        }
+        .lang-switch {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .lang-switch a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #667eea;
+            border-radius: 20px;
+            margin: 0 5px;
+            display: inline-block;
+        }
+        .lang-switch a:hover, .lang-switch a.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lang-switch">
+            <a href="privacy-policy.html" class="active">Français</a>
+            <a href="privacy-policy-en.html">English</a>
+        </div>
+
+        <div class="header">
+            <div class="logo">📇</div>
+            <h1>Politique de Confidentialité</h1>
+            <p class="subtitle">Cards Control - Application NFC & Cartes de Visite</p>
+            <p class="subtitle">Dernière mise à jour : 7 décembre 2024</p>
+        </div>
+
+        <div class="highlight">
+            <strong>Résumé :</strong> Cards Control respecte votre vie privée. Nous collectons uniquement les données nécessaires au fonctionnement de l'application et ne les vendons jamais à des tiers.
+        </div>
+
+        <h2>1. Données collectées</h2>
+        <p>Cards Control collecte les types de données suivants :</p>
+        <ul>
+            <li><strong>Données de compte :</strong> Adresse email et nom (lors de l'inscription)</li>
+            <li><strong>Cartes de visite :</strong> Informations que vous saisissez (nom, téléphone, email, etc.)</li>
+            <li><strong>Tags NFC :</strong> Contenu des tags que vous lisez ou écrivez</li>
+            <li><strong>Photos :</strong> Images que vous ajoutez à vos cartes (stockées de manière sécurisée)</li>
+            <li><strong>Données d'utilisation :</strong> Statistiques anonymisées pour améliorer l'application</li>
+        </ul>
+
+        <h2>2. Utilisation des données</h2>
+        <p>Vos données sont utilisées pour :</p>
+        <ul>
+            <li>Créer et gérer vos cartes de visite numériques</li>
+            <li>Synchroniser vos données entre vos appareils</li>
+            <li>Fournir les fonctionnalités NFC (lecture, écriture, émulation)</li>
+            <li>Améliorer l'expérience utilisateur</li>
+            <li>Vous envoyer des notifications importantes (si autorisées)</li>
+        </ul>
+
+        <h2>3. Stockage et sécurité</h2>
+        <p>Vos données sont stockées de manière sécurisée :</p>
+        <ul>
+            <li>Hébergement sur Firebase (Google Cloud Platform)</li>
+            <li>Chiffrement des données en transit (HTTPS/TLS)</li>
+            <li>Authentification sécurisée via Firebase Auth</li>
+            <li>Données sensibles stockées localement de manière chiffrée</li>
+        </ul>
+
+        <h2>4. Partage des données</h2>
+        <p>Nous ne vendons <strong>jamais</strong> vos données personnelles. Vos données peuvent être partagées uniquement :</p>
+        <ul>
+            <li>Avec votre consentement explicite (partage de carte de visite)</li>
+            <li>Avec nos fournisseurs de services (Firebase, Google Analytics)</li>
+            <li>Si requis par la loi</li>
+        </ul>
+
+        <h2>5. Permissions de l'application</h2>
+        <p>Cards Control demande les permissions suivantes :</p>
+        <ul>
+            <li><strong>NFC :</strong> Pour lire et écrire des tags NFC</li>
+            <li><strong>Caméra :</strong> Pour scanner des cartes de visite et QR codes</li>
+            <li><strong>Stockage :</strong> Pour sauvegarder vos photos de profil</li>
+            <li><strong>Internet :</strong> Pour la synchronisation des données</li>
+            <li><strong>Contacts :</strong> Pour importer/exporter des contacts (optionnel)</li>
+        </ul>
+
+        <h2>6. Vos droits (RGPD)</h2>
+        <p>Conformément au RGPD, vous avez le droit de :</p>
+        <ul>
+            <li><strong>Accéder</strong> à vos données personnelles</li>
+            <li><strong>Rectifier</strong> vos données inexactes</li>
+            <li><strong>Supprimer</strong> votre compte et toutes vos données</li>
+            <li><strong>Exporter</strong> vos données dans un format portable</li>
+            <li><strong>Vous opposer</strong> au traitement de vos données</li>
+        </ul>
+        <p>Pour exercer ces droits, contactez-nous à l'adresse ci-dessous.</p>
+
+        <h2>7. Conservation des données</h2>
+        <p>Vos données sont conservées tant que votre compte est actif. Après suppression de votre compte, toutes vos données sont effacées sous 30 jours.</p>
+
+        <h2>8. Modifications</h2>
+        <p>Cette politique peut être mise à jour. Nous vous informerons de tout changement significatif via l'application ou par email.</p>
+
+        <div class="contact">
+            <h2>9. Contact</h2>
+            <p>Pour toute question concernant cette politique de confidentialité :</p>
+            <p><strong>Email :</strong> <a href="mailto:contact@cards-control.app">contact@cards-control.app</a></p>
+            <p><strong>Application :</strong> Cards Control</p>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 Cards Control. Tous droits réservés.</p>
+        </div>
+    </div>
+</body>
+</html>

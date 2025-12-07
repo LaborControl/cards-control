@@ -1,0 +1,18 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "HVHC84RKZ3.com.cardscontrol.app",
+        "paths": [
+          "/card/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "YOUR_TEAM_ID.com.cardscontrol.app"
+    ]
+  }
+}

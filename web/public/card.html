@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte de visite - Cards Control</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#2563EB">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Carte de visite">
+    <meta property="og:description" content="Consultez ma carte de visite numérique">
+    <meta property="og:type" content="profile">
+    <meta property="og:image" content="/og-image.png">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --background: #0F172A;
+            --surface: #1E293B;
+            --surface-light: #334155;
+            --text: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --success: #10B981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 40px 24px;
+            text-align: center;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0 auto 16px;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .job-title {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .company {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: var(--surface-light);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: var(--text);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .contact-item:hover {
+            transform: translateX(4px);
+            background: var(--primary);
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .contact-item:hover .contact-icon {
+            background: white;
+            color: var(--primary);
+        }
+
+        .contact-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .contact-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .contact-value {
+            font-size: 15px;
+            word-break: break-all;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--surface-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .social-link:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+        }
+
+        .social-link svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--text);
+        }
+
+        .save-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .save-button:hover {
+            background: #059669;
+            transform: scale(1.02);
+        }
+
+        .save-button svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            fill: currentColor;
+        }
+
+        .cv-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: transform 0.2s, background 0.2s;
+            text-decoration: none;
+        }
+
+        .cv-button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
+        }
+
+        .cv-button svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            fill: currentColor;
+        }
+
+        .wallet-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px;
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: transform 0.2s, background 0.2s;
+            text-decoration: none;
+        }
+
+        .wallet-button:hover {
+            background: #333;
+            transform: scale(1.02);
+        }
+
+        .wallet-button img {
+            height: 24px;
+            margin-right: 8px;
+        }
+
+        .bio {
+            padding: 16px;
+            background: var(--surface-light);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--surface-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .error-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .app-banner {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .app-banner-text {
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .app-banner-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .app-banner-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .app-banner-btn {
+            background: white;
+            color: var(--primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .logo img {
+            height: 40px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <span class="logo-text">Cards Control</span>
+        </div>
+
+        <div id="card-container">
+            <div class="card">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Chargement de la carte...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Carte de visite cr&eacute;&eacute;e avec <a href="#">Cards Control</a><br>
+            by Jean Claude PASTOR
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAssP7KJgZ5TyTFgGi1I37TLz1qMwvcrrQ",
+            authDomain: "lc-nfc-pro.firebaseapp.com",
+            projectId: "lc-nfc-pro",
+            storageBucket: "lc-nfc-pro.firebasestorage.app",
+            messagingSenderId: "245650933256",
+            appId: "1:245650933256:web:abc123def456"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get card ID from URL
+        const pathParts = window.location.pathname.split('/');
+        const cardId = pathParts[pathParts.length - 1];
+
+        // Load card data
+        async function loadCard() {
+            const container = document.getElementById('card-container');
+
+            if (!cardId || cardId === 'card') {
+                showError('ID de carte invalide');
+                return;
+            }
+
+            try {
+                // Fetch from public_cards collection
+                const doc = await db.collection('public_cards').doc(cardId).get();
+
+                if (!doc.exists) {
+                    showError('Carte non trouv&eacute;e');
+                    return;
+                }
+
+                const card = doc.data();
+
+                // Record view
+                try {
+                    await db.collection('card_views').add({
+                        cardId: cardId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        source: 'web',
+                        userAgent: navigator.userAgent
+                    });
+
+                    // Increment view count
+                    await db.collection('public_cards').doc(cardId).update({
+                        viewCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                } catch (e) {
+                    console.log('Could not record view', e);
+                }
+
+                displayCard(card);
+
+            } catch (error) {
+                console.error('Error loading card:', error);
+                showError('Erreur lors du chargement');
+            }
+        }
+
+        function displayCard(card) {
+            const container = document.getElementById('card-container');
+            const primaryColor = card.primaryColor || '#6366F1';
+
+            // Update CSS variable
+            document.documentElement.style.setProperty('--primary', primaryColor);
+
+            // Build initials
+            const firstName = card.firstName || '';
+            const lastName = card.lastName || '';
+            const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+
+            // Build contact items
+            let contactItems = '';
+
+            if (card.email) {
+                contactItems += buildContactItem('email', 'Email', card.email, `mailto:${card.email}`);
+            }
+            if (card.phone) {
+                contactItems += buildContactItem('phone', 'T&eacute;l&eacute;phone', card.phone, `tel:${card.phone}`);
+            }
+            if (card.mobile) {
+                contactItems += buildContactItem('mobile', 'Mobile', card.mobile, `tel:${card.mobile}`);
+            }
+            if (card.website) {
+                const url = card.website.startsWith('http') ? card.website : `https://${card.website}`;
+                contactItems += buildContactItem('website', 'Site web', card.website, url);
+            }
+            if (card.address) {
+                const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(card.address)}`;
+                contactItems += buildContactItem('address', 'Adresse', card.address, mapsUrl);
+            }
+
+            // Build social links
+            let socialLinks = '';
+            if (card.socialLinks) {
+                for (const [network, url] of Object.entries(card.socialLinks)) {
+                    if (url) {
+                        socialLinks += buildSocialLink(network, url);
+                    }
+                }
+            }
+
+            // Build bio
+            let bioHtml = '';
+            if (card.bio) {
+                bioHtml = `<div class="bio">${escapeHtml(card.bio)}</div>`;
+            }
+
+            // Generate vCard data
+            const vCardData = generateVCard(card);
+            const vCardBlob = new Blob([vCardData], { type: 'text/vcard' });
+            const vCardUrl = URL.createObjectURL(vCardBlob);
+
+            // Build header background style
+            let headerStyle = '';
+            if (card.headerBackgroundType === 'image' && card.headerBackgroundValue) {
+                headerStyle = `background-image: url('${escapeHtml(card.headerBackgroundValue)}'); background: url('${escapeHtml(card.headerBackgroundValue)}') center/cover;`;
+            } else if (card.headerBackgroundType === 'preset' && card.headerBackgroundValue) {
+                headerStyle = `background: ${card.headerBackgroundValue};`;
+            } else if (card.headerBackgroundType === 'color' && card.headerBackgroundValue) {
+                headerStyle = `background: ${card.headerBackgroundValue};`;
+            }
+
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header" style="${headerStyle}">
+                        <div class="avatar">
+                            ${card.photoUrl ? `<img src="${card.photoUrl}" alt="${firstName}">` : initials}
+                        </div>
+                        <div class="name">${escapeHtml(firstName)} ${escapeHtml(lastName)}</div>
+                        ${card.jobTitle ? `<div class="job-title">${escapeHtml(card.jobTitle)}</div>` : ''}
+                        ${card.company ? `<div class="company">${escapeHtml(card.company)}</div>` : ''}
+                    </div>
+                    <div class="card-body">
+                        ${bioHtml}
+                        ${contactItems}
+                        ${socialLinks ? `<div class="social-links">${socialLinks}</div>` : ''}
+                        <a href="${vCardUrl}" download="${firstName}_${lastName}.vcf" class="save-button">
+                            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+                            Enregistrer le contact
+                        </a>
+                        ${card.cvUrl ? `
+                        <a href="${escapeHtml(card.cvUrl)}" target="_blank" rel="noopener" class="cv-button">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+                            T&eacute;l&eacute;charger le CV
+                        </a>
+                        ` : ''}
+                        <div class="app-banner" id="app-banner" style="display: none;">
+                            <div class="app-banner-text">
+                                <div class="app-banner-title">Cards Control</div>
+                                <div class="app-banner-subtitle">Cr&eacute;ez votre propre carte NFC</div>
+                            </div>
+                            <a href="#" id="download-app-btn" class="app-banner-btn">T&eacute;l&eacute;charger</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Show app banner on mobile
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isAndroid || isIOS) {
+                const banner = document.getElementById('app-banner');
+                const downloadBtn = document.getElementById('download-app-btn');
+                if (banner && downloadBtn) {
+                    banner.style.display = 'flex';
+                    downloadBtn.href = isAndroid
+                        ? 'https://play.google.com/store/apps/details?id=com.cardscontrol.app'
+                        : 'https://apps.apple.com/app/id6739503891';
+                }
+            }
+        }
+
+        function buildContactItem(type, label, value, href) {
+            const icons = {
+                email: '<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+                phone: '<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>',
+                mobile: '<svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+                website: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
+                address: '<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+            };
+
+            return `
+                <a href="${href}" class="contact-item" target="_blank" rel="noopener">
+                    <div class="contact-icon">${icons[type]}</div>
+                    <div>
+                        <div class="contact-label">${label}</div>
+                        <div class="contact-value">${escapeHtml(value)}</div>
+                    </div>
+                </a>
+            `;
+        }
+
+        function buildSocialLink(network, url) {
+            const icons = {
+                linkedin: '<svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
+                twitter: '<svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>',
+                facebook: '<svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>',
+                instagram: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
+                github: '<svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>',
+                youtube: '<svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.33z"/><polygon points="9.75,15.02 15.5,11.75 9.75,8.48"/></svg>',
+                whatsapp: '<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>',
+                telegram: '<svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>'
+            };
+
+            const icon = icons[network.toLowerCase()] || icons.website;
+            const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+
+            return `<a href="${fullUrl}" class="social-link" target="_blank" rel="noopener" title="${network}">${icon}</a>`;
+        }
+
+        function generateVCard(card) {
+            let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
+            vcard += `N:${card.lastName || ''};${card.firstName || ''};;;\n`;
+            vcard += `FN:${card.firstName || ''} ${card.lastName || ''}\n`;
+
+            if (card.company) vcard += `ORG:${card.company}\n`;
+            if (card.jobTitle) vcard += `TITLE:${card.jobTitle}\n`;
+            if (card.email) vcard += `EMAIL:${card.email}\n`;
+            if (card.phone) vcard += `TEL;TYPE=WORK:${card.phone}\n`;
+            if (card.mobile) vcard += `TEL;TYPE=CELL:${card.mobile}\n`;
+            if (card.website) vcard += `URL:${card.website}\n`;
+            if (card.address) vcard += `ADR:;;${card.address};;;;\n`;
+            if (card.photoUrl) vcard += `PHOTO;VALUE=URI:${card.photoUrl}\n`;
+            if (card.bio) vcard += `NOTE:${card.bio}\n`;
+
+            if (card.socialLinks) {
+                for (const [network, url] of Object.entries(card.socialLinks)) {
+                    if (url) vcard += `X-SOCIALPROFILE;TYPE=${network}:${url}\n`;
+                }
+            }
+
+            vcard += 'END:VCARD';
+            return vcard;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('card-container');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="error">
+                        <div class="error-icon">&#128533;</div>
+                        <h2>${message}</h2>
+                        <p style="margin-top: 12px; color: var(--text-secondary);">
+                            Cette carte n'existe pas ou a &eacute;t&eacute; supprim&eacute;e.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Try to open in app (App Links / Universal Links)
+        function tryOpenInApp() {
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            if (isAndroid || isIOS) {
+                // The page URL itself should trigger App Links on Android
+                // and Universal Links on iOS if the app is installed
+                // This is handled automatically by the OS
+
+                // For extra measure, try the custom scheme after a delay
+                setTimeout(() => {
+                    // If we're still here, the app link didn't work
+                    // Try custom scheme as fallback
+                    window.location.href = `nfcpro://card/${cardId}`;
+                }, 100);
+            }
+        }
+
+        // Load card on page load
+        loadCard();
+
+        // Try to open in app on mobile
+        tryOpenInApp();
+    </script>
+</body>
+</html>
