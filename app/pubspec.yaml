@@ -41,7 +41,7 @@ dependencies:
   shimmer: ^3.0.0
   lottie: ^3.0.0
   qr_flutter: ^4.1.0
-  mobile_scanner: ^4.0.1
+  mobile_scanner: ^6.0.2
 
   # OCR & Image Processing
   google_mlkit_text_recognition: ^0.13.0
