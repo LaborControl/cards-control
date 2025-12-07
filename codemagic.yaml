@@ -4,35 +4,36 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     working_directory: app
+    integrations:
+      app_store_connect: Codemagic
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.cardscontrol.app
       flutter: stable
       xcode: latest
       cocoapods: default
-      groups:
-        - app_store_credentials
       vars:
         BUNDLE_ID: "com.cardscontrol.app"
-        APP_STORE_APP_ID: "6738575861"
     scripts:
-      - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
+          flutter pub get
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
       - name: Flutter build ipa
         script: |
           flutter build ipa --release \
             --build-name=1.0.0 \
-            --build-number=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID") + 1)) \
+            --build-number=$PROJECT_BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - flutter_drive.log
     publishing:
       app_store_connect:
         auth: integration
@@ -46,19 +47,12 @@ workflows:
     working_directory: app
     environment:
       flutter: stable
-      groups:
-        - google_play_credentials
     scripts:
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
+          flutter pub get
       - name: Build AAB
         script: |
           flutter build appbundle --release
     artifacts:
       - build/app/outputs/bundle/release/*.aab
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: production
-        submit_as_draft: true
