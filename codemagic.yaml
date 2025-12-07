@@ -9,12 +9,12 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.cardscontrol.app
+        bundle_identifier: com.cards-control.app
       flutter: stable
       xcode: latest
       cocoapods: default
       vars:
-        BUNDLE_ID: "com.cardscontrol.app"
+        BUNDLE_ID: "com.cards-control.app"
     scripts:
       - name: Get Flutter packages
         script: |
