@@ -16,8 +16,10 @@ workflows:
       vars:
         BUNDLE_ID: "com.cardscontrol.app"
     scripts:
-      - name: Get Flutter packages
+      - name: Clean and get Flutter packages
         script: |
+          flutter clean
+          rm -rf pubspec.lock
           flutter pub get
       - name: Regenerate iOS project
         script: |
