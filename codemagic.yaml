@@ -19,9 +19,13 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
+      - name: Regenerate iOS project
+        script: |
+          rm -rf ios/Pods ios/Podfile.lock
+          flutter build ios --config-only --release --no-codesign
       - name: Install CocoaPods dependencies
         script: |
-          cd ios && pod install
+          cd ios && pod install --repo-update
       - name: Set up code signing
         script: |
           xcode-project use-profiles
